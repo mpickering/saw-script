@@ -897,71 +897,69 @@ data PermEnv = PermEnv {
 -- * Template Haskell–generated instances
 ----------------------------------------------------------------------
 
-instance NuMatchingAny1 PermExpr where
-  nuMatchingAny1Proof = nuMatchingProof
+$( fmap concat (sequence [
+   [d| instance NuMatchingAny1 PermExpr where
+          nuMatchingAny1Proof = nuMatchingProof |]
+ , [d| instance NuMatchingAny1 ValuePerm where
+        nuMatchingAny1Proof = nuMatchingProof |]
+ , [d| instance NuMatchingAny1 VarAndPerm where
+        nuMatchingAny1Proof = nuMatchingProof |]
+ , [d| instance NuMatchingAny1 ExprAndPerm where
+        nuMatchingAny1Proof = nuMatchingProof |]
+ , [d| instance NuMatchingAny1 DistPerms where
+        nuMatchingAny1Proof = nuMatchingProof |]
+ , mkNuMatching [t| forall a . BVFactor a |]
+  ,(mkNuMatching [t| RWModality |])
+  ,(mkNuMatching [t| forall b args w. NamedShapeBody b args w |])
+  ,(mkNuMatching [t| forall b args w. NamedShape b args w |])
+  ,(mkNuMatching [t| forall w . LLVMFieldShape w |])
+  ,(mkNuMatching [t| forall a . PermExpr a |])
+  ,(mkNuMatching [t| forall w. BVRange w |])
+  ,(mkNuMatching [t| forall a. MbRangeForType a |])
+  ,(mkNuMatching [t| forall a. NuMatching a => SomeTypedMb a |])
+  ,(mkNuMatching [t| forall w. BVProp w |])
+  ,(mkNuMatching [t| forall w sz . LLVMFieldPerm w sz |])
+  ,(mkNuMatching [t| forall w . LLVMArrayBorrow w |])
+  ,(mkNuMatching [t| forall w . LLVMArrayPerm w |])
+  ,(mkNuMatching [t| forall w . LLVMBlockPerm w |])
+  ,(mkNuMatching [t| forall ns. NameSortRepr ns |])
+  ,(mkNuMatching [t| forall ns args a. NameReachConstr ns args a |])
+  ,(mkNuMatching [t| forall ns args a. NamedPermName ns args a |])
+  ,(mkNuMatching [t| forall a. PermOffset a |])
+  ,(mkNuMatching [t| forall ghosts args gouts ret. FunPerm ghosts args gouts ret |])
+  ,(mkNuMatching [t| forall a . AtomicPerm a |])
+  ,(mkNuMatching [t| forall a . ValuePerm a |])
+--   ,(mkNuMatching [t| forall as. ValuePerms as |])
+  ,(mkNuMatching [t| forall a . VarAndPerm a |])
+  ,(mkNuMatching [t| forall a . ExprAndPerm a |])
 
-instance NuMatchingAny1 ValuePerm where
-  nuMatchingAny1Proof = nuMatchingProof
+  ,(mkNuMatching [t| forall w . LLVMArrayIndex w |])
+  ,(mkNuMatching [t| forall args ret. SomeFunPerm args ret |])
+  ,(mkNuMatching [t| SomeNamedPermName |])
+  ,(mkNuMatching [t| forall b args a. OpaquePerm b args a |])
+  ,(mkNuMatching [t| forall args a reach. ReachMethods args a reach |])
+  ,(mkNuMatching [t| forall b reach args a. RecPerm b reach args a |])
+  ,(mkNuMatching [t| forall b args a. DefinedPerm b args a |])
+  ,(mkNuMatching [t| forall ns args a. NamedPerm ns args a |])
+  ,(mkNuMatching [t| forall args a. LifetimeFunctor args a |])
+  ,(mkNuMatching [t| forall ps. LifetimeCurrentPerms ps |])
+  ,(mkNuMatching [t| forall a. SomeLLVMBlockPerm a |])
+  ,(mkNuMatching [t| forall w. SomeBindingLLVMBlockPerm w |])
 
-instance NuMatchingAny1 VarAndPerm where
-  nuMatchingAny1Proof = nuMatchingProof
-
-instance NuMatchingAny1 ExprAndPerm where
-  nuMatchingAny1Proof = nuMatchingProof
-
-instance NuMatchingAny1 DistPerms where
-  nuMatchingAny1Proof = nuMatchingProof
-
-$(mkNuMatching [t| forall a . BVFactor a |])
-$(mkNuMatching [t| RWModality |])
-$(mkNuMatching [t| forall b args w. NamedShapeBody b args w |])
-$(mkNuMatching [t| forall b args w. NamedShape b args w |])
-$(mkNuMatching [t| forall w . LLVMFieldShape w |])
-$(mkNuMatching [t| forall a . PermExpr a |])
-$(mkNuMatching [t| forall w. BVRange w |])
-$(mkNuMatching [t| forall a. MbRangeForType a |])
-$(mkNuMatching [t| forall a. NuMatching a => SomeTypedMb a |])
-$(mkNuMatching [t| forall w. BVProp w |])
-$(mkNuMatching [t| forall w sz . LLVMFieldPerm w sz |])
-$(mkNuMatching [t| forall w . LLVMArrayBorrow w |])
-$(mkNuMatching [t| forall w . LLVMArrayPerm w |])
-$(mkNuMatching [t| forall w . LLVMBlockPerm w |])
-$(mkNuMatching [t| forall ns. NameSortRepr ns |])
-$(mkNuMatching [t| forall ns args a. NameReachConstr ns args a |])
-$(mkNuMatching [t| forall ns args a. NamedPermName ns args a |])
-$(mkNuMatching [t| forall a. PermOffset a |])
-$(mkNuMatching [t| forall ghosts args gouts ret. FunPerm ghosts args gouts ret |])
-$(mkNuMatching [t| forall a . AtomicPerm a |])
-$(mkNuMatching [t| forall a . ValuePerm a |])
--- $(mkNuMatching [t| forall as. ValuePerms as |])
-$(mkNuMatching [t| forall a . VarAndPerm a |])
-$(mkNuMatching [t| forall a . ExprAndPerm a |])
-
-$(mkNuMatching [t| forall w . LLVMArrayIndex w |])
-$(mkNuMatching [t| forall args ret. SomeFunPerm args ret |])
-$(mkNuMatching [t| SomeNamedPermName |])
-$(mkNuMatching [t| forall b args a. OpaquePerm b args a |])
-$(mkNuMatching [t| forall args a reach. ReachMethods args a reach |])
-$(mkNuMatching [t| forall b reach args a. RecPerm b reach args a |])
-$(mkNuMatching [t| forall b args a. DefinedPerm b args a |])
-$(mkNuMatching [t| forall ns args a. NamedPerm ns args a |])
-$(mkNuMatching [t| forall args a. LifetimeFunctor args a |])
-$(mkNuMatching [t| forall ps. LifetimeCurrentPerms ps |])
-$(mkNuMatching [t| forall a. SomeLLVMBlockPerm a |])
-$(mkNuMatching [t| forall w. SomeBindingLLVMBlockPerm w |])
-
-$(mkNuMatching [t| forall w sz. TaggedUnionShape w sz |])
-$(mkNuMatching [t| forall w. SomeTaggedUnionShape w |])
-$(mkNuMatching [t| forall ctx. PermVarSubst ctx |])
-$(mkNuMatching [t| PermEnvFunEntry |])
-$(mkNuMatching [t| SomeNamedPerm |])
-$(mkNuMatching [t| SomeNamedShape |])
-$(mkNuMatching [t| PermEnvGlobalEntry |])
-$(mkNuMatching [t| forall args. BlockHintSort args |])
-$(mkNuMatching [t| forall blocks init ret args.
+  ,(mkNuMatching [t| forall w sz. TaggedUnionShape w sz |])
+  ,(mkNuMatching [t| forall w. SomeTaggedUnionShape w |])
+  ,(mkNuMatching [t| forall ctx. PermVarSubst ctx |])
+  ,(mkNuMatching [t| PermEnvFunEntry |])
+  ,(mkNuMatching [t| SomeNamedPerm |])
+  ,(mkNuMatching [t| SomeNamedShape |])
+  ,(mkNuMatching [t| PermEnvGlobalEntry |])
+  ,(mkNuMatching [t| forall args. BlockHintSort args |])
+  ,(mkNuMatching [t| forall blocks init ret args.
                 BlockHint blocks init ret args |])
-$(mkNuMatching [t| Hint |])
-$(mkNuMatching [t| PermEnv |])
+  ,(mkNuMatching [t| Hint |])
+  ,(mkNuMatching [t| PermEnv |])
+  ]))
+
 
 -- NOTE: this instance would require a NuMatching instance for NameMap...
 -- $(mkNuMatching [t| forall ps. PermSet ps |])

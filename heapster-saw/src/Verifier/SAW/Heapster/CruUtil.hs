@@ -317,11 +317,6 @@ instance Liftable EndianForm where
 
 $(mkNuMatching [t| forall f. NuMatchingAny1 f => Some f |])
 
-instance NuMatchingAny1 BaseTypeRepr where
-  nuMatchingAny1Proof = nuMatchingProof
-
-instance NuMatchingAny1 TypeRepr where
-  nuMatchingAny1Proof = nuMatchingProof
 
 $(mkNuMatching [t| forall f ctx . NuMatchingAny1 f => AssignView f ctx |])
 
@@ -340,73 +335,83 @@ instance NuMatchingAny1 f => NuMatching (Assignment f ctx) where
 instance NuMatchingAny1 f => NuMatchingAny1 (Assignment f) where
   nuMatchingAny1Proof = nuMatchingProof
 
-instance Closable (Assignment TypeRepr ctx) where
-  toClosed = unsafeClose
-
-instance Liftable (Assignment TypeRepr ctx) where
-  mbLift = unClosed . mbLift . fmap toClosed
 
 
-$(mkNuMatching [t| forall f tp. NuMatchingAny1 f => BaseTerm f tp |])
+$(fmap Prelude.concat (sequence
+    [mkNuMatching [t| forall f tp. NuMatchingAny1 f => BaseTerm f tp |]
 
-instance NuMatchingAny1 f => NuMatchingAny1 (BaseTerm f) where
-  nuMatchingAny1Proof = nuMatchingProof
+    , [d| instance NuMatchingAny1 f => NuMatchingAny1 (BaseTerm f) where
+            nuMatchingAny1Proof = nuMatchingProof |]
 
-$(mkNuMatching [t| forall a. NuMatching a => NonEmpty a |])
-$(mkNuMatching [t| forall p v. (NuMatching p, NuMatching v) => Partial p v |])
-$(mkNuMatching [t| X86_80Val |])
--- $(mkNuMatching [t| MemoryLoadError |]) -- NOTE: contains unexported types
-$(mkNuMatching [t| forall w. BV.BV w |])
-$(mkNuMatching [t| Word16String |])
-$(mkNuMatching [t| forall s. StringLiteral s |])
-$(mkNuMatching [t| forall s. StringInfoRepr s |])
-$(mkNuMatching [t| forall ext f tp.
+
+  ,(mkNuMatching [t| forall a. NuMatching a => NonEmpty a |])
+  ,(mkNuMatching [t| forall p v. (NuMatching p, NuMatching v) => Partial p v |])
+  ,(mkNuMatching [t| X86_80Val |])
+--   ,(mkNuMatching [t| MemoryLoadError |]) -- NOTE: contains unexported types
+  ,(mkNuMatching [t| forall w. BV.BV w |])
+  ,(mkNuMatching [t| Word16String |])
+  ,(mkNuMatching [t| forall s. StringLiteral s |])
+  ,(mkNuMatching [t| forall s. StringInfoRepr s |])
+  ,(mkNuMatching [t| forall ext f tp.
                 (NuMatchingAny1 f, NuMatchingAny1 (ExprExtension ext f)) =>
                 App ext f tp |])
 
 
-$(mkNuMatching [t| Bytes |])
-$(mkNuMatching [t| forall v. NuMatching v => Field v |])
-$(mkNuMatching [t| Alignment |])
-$(mkNuMatching [t| UB.PtrComparisonOperator |])
-$(mkNuMatching [t| forall v. NuMatching v => StorageTypeF v |])
-$(mkNuMatching [t| StorageType |])
+  ,(mkNuMatching [t| Bytes |])
+  ,(mkNuMatching [t| forall v. NuMatching v => Field v |])
+  ,(mkNuMatching [t| Alignment |])
+  ,(mkNuMatching [t| UB.PtrComparisonOperator |])
+  ,(mkNuMatching [t| forall v. NuMatching v => StorageTypeF v |])
+  ,(mkNuMatching [t| StorageType |])
 
-$(mkNuMatching [t| forall f. NuMatchingAny1 f => Poison.Poison f |])
-$(mkNuMatching [t| forall f. NuMatchingAny1 f => UB.UndefinedBehavior f |])
--- $(mkNuMatching [t| forall f. NuMatchingAny1 f => BadBehavior f |])
--- $(mkNuMatching [t| forall f. NuMatchingAny1 f => LLVMSafetyAssertion f |])
-$(mkNuMatching [t| forall f. NuMatchingAny1 f => LLVMSideCondition f |])
+  ,(mkNuMatching [t| forall f. NuMatchingAny1 f => Poison.Poison f |])
+  ,(mkNuMatching [t| forall f. NuMatchingAny1 f => UB.UndefinedBehavior f |])
+--   ,(mkNuMatching [t| forall f. NuMatchingAny1 f => BadBehavior f |])
+--   ,(mkNuMatching [t| forall f. NuMatchingAny1 f => LLVMSafetyAssertion f |])
+  ,(mkNuMatching [t| forall f. NuMatchingAny1 f => LLVMSideCondition f |])
 
-$(mkNuMatching [t| forall blocks tp. BlockID blocks tp |])
+  ,(mkNuMatching [t| forall blocks tp. BlockID blocks tp |])
 
 -- FIXME: Hobbits mkNuMatching cannot handle empty types
--- $(mkNuMatching [t| forall f tp. EmptyExprExtension f tp |])
+--   ,(mkNuMatching [t| forall f tp. EmptyExprExtension f tp |])
 
-instance NuMatching (EmptyExprExtension f tp) where
-  nuMatchingProof = unsafeMbTypeRepr
+ , [d| instance NuMatching (EmptyExprExtension f tp) where
+        nuMatchingProof = unsafeMbTypeRepr |]
 
-instance NuMatchingAny1 (EmptyExprExtension f) where
-  nuMatchingAny1Proof = nuMatchingProof
+ , [d| instance NuMatchingAny1 (EmptyExprExtension f) where
+        nuMatchingAny1Proof = nuMatchingProof |]
 
-$(mkNuMatching [t| AVXOp1 |])
-$(mkNuMatching [t| forall f tp. NuMatchingAny1 f => ExtX86 f tp |])
+  ,(mkNuMatching [t| AVXOp1 |])
+  ,(mkNuMatching [t| forall f tp. NuMatchingAny1 f => ExtX86 f tp |])
 
-instance NuMatching (Nonce s tp) where
-  nuMatchingProof = unsafeMbTypeRepr
+ , [d| instance NuMatching (Nonce s tp) where
+        nuMatchingProof = unsafeMbTypeRepr |]
 
-instance Closable (Nonce s tp) where
+ , [d| instance Closable (Nonce s tp) where
+        toClosed = unsafeClose |]
+
+ , [d| instance Liftable (Nonce s tp) where
+        mbLift = unClosed . mbLift . fmap toClosed |]
+
+  ,(mkNuMatching [t| forall tp. GlobalVar tp |])
+  ,(mkNuMatching [t| forall f tp. NuMatchingAny1 f =>
+                LLVMExtensionExpr f tp |])
+ , [d| instance NuMatchingAny1 f => NuMatchingAny1 (LLVMExtensionExpr f) where
+         nuMatchingAny1Proof = nuMatchingProof |]
+ , [d| instance Liftable (Assignment TypeRepr ctx) where
+          mbLift = unClosed . mbLift . fmap toClosed |]
+
+ , [d| instance NuMatchingAny1 BaseTypeRepr where
+          nuMatchingAny1Proof = nuMatchingProof |]
+
+ , [d| instance NuMatchingAny1 TypeRepr where
+          nuMatchingAny1Proof = nuMatchingProof |]
+
+         ]))
+
+instance Closable (Assignment TypeRepr ctx) where
   toClosed = unsafeClose
 
-instance Liftable (Nonce s tp) where
-  mbLift = unClosed . mbLift . fmap toClosed
-
-$(mkNuMatching [t| forall tp. GlobalVar tp |])
-$(mkNuMatching [t| forall f tp. NuMatchingAny1 f =>
-                LLVMExtensionExpr f tp |])
-
-instance NuMatchingAny1 f => NuMatchingAny1 (LLVMExtensionExpr f) where
-  nuMatchingAny1Proof = nuMatchingProof
 
 {-
 $(mkNuMatching [t| forall w f tp. NuMatchingAny1 f => LLVMStmt w f tp |])
@@ -475,10 +480,10 @@ closeAssign f (viewAssign -> AssignExtend asgn fa) =
 -- 'TypeRepr' for @a@
 data Typed f a = Typed { typedType :: TypeRepr a, typedObj :: f a }
 
-$(mkNuMatching [t| forall f a. NuMatching (f a) => Typed f a |])
-
-instance NuMatchingAny1 f => NuMatchingAny1 (Typed f) where
-  nuMatchingAny1Proof = nuMatchingProof
+$( fmap Prelude.concat (sequence
+  [ mkNuMatching [t| forall f a. NuMatching (f a) => Typed f a |]
+  , [d| instance NuMatchingAny1 f => NuMatchingAny1 (Typed f) where
+          nuMatchingAny1Proof = nuMatchingProof |]]))
 
 -- | Cast an existential 'Typed' to a particular type or raise an error
 castTypedM :: Fail.MonadFail m => String -> TypeRepr a -> Some (Typed f) -> m (f a)
@@ -576,10 +581,10 @@ mkKnownReprObj _ = KnownReprObj
 unKnownReprObj :: KnownReprObj f a -> f a
 unKnownReprObj (KnownReprObj :: KnownReprObj f a) = knownRepr :: f a
 
-$(mkNuMatching [t| forall f a. KnownReprObj f a |])
-
-instance NuMatchingAny1 (KnownReprObj f) where
-  nuMatchingAny1Proof = nuMatchingProof
+$(fmap Prelude.concat (sequence [
+  mkNuMatching [t| forall f a. KnownReprObj f a |]
+  , [d| instance NuMatchingAny1 (KnownReprObj f) where
+          nuMatchingAny1Proof = nuMatchingProof |]]))
 
 instance Liftable (KnownReprObj f a) where
   mbLift (mbMatch -> [nuMP| KnownReprObj |]) = KnownReprObj

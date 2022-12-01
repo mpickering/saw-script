@@ -1596,14 +1596,6 @@ idLocalPermImpl = LocalPermImpl $ PermImpl_Done $ LocalImplRet Refl
 
 -- type IsLLVMPointerTypeList w ps = RAssign ((:~:) (LLVMPointerType w)) ps
 
-instance NuMatchingAny1 EqPerm where
-  nuMatchingAny1Proof = nuMatchingProof
-
-instance NuMatchingAny1 (LocalImplRet ps) where
-  nuMatchingAny1Proof = nuMatchingProof
-
-instance NuMatchingAny1 (OrListDisj ps a) where
-  nuMatchingAny1Proof = nuMatchingProof
 
 -- Many of these types are mutually recursive. Moreover, Template Haskell
 -- declaration splices strictly separate top-level groups, so if we were to
@@ -1611,18 +1603,29 @@ instance NuMatchingAny1 (OrListDisj ps a) where
 -- involving mutually recursive types would not typecheck. As a result, we
 -- must put everything into a single splice so that it forms a single top-level
 -- group.
-$(concatMapM mkNuMatching
-  [ [t| forall a. EqPerm a |]
-  , [t| forall ps a. NuMatching a => EqProofStep ps a |]
-  , [t| forall ps a. NuMatching a => EqProof ps a |]
-  , [t| forall ps_in ps_out. SimplImpl ps_in ps_out |]
-  , [t| forall ps_in ps_outs. PermImpl1 ps_in ps_outs |]
-  , [t| forall ps a disj. OrListDisj ps a disj |]
-  , [t| forall r bs_pss. NuMatchingAny1 r => MbPermImpls r bs_pss |]
-  , [t| forall r ps. NuMatchingAny1 r => PermImpl r ps |]
-  , [t| forall ps_in ps_out. LocalPermImpl ps_in ps_out |]
-  , [t| forall ps ps'. LocalImplRet ps ps' |]
-  ])
+$(do
+  r1 <- concatMapM mkNuMatching
+   [ [t| forall a. EqPerm a |]
+   , [t| forall ps a. NuMatching a => EqProofStep ps a |]
+   , [t| forall ps a. NuMatching a => EqProof ps a |]
+   , [t| forall ps_in ps_out. SimplImpl ps_in ps_out |]
+   , [t| forall ps_in ps_outs. PermImpl1 ps_in ps_outs |]
+   , [t| forall ps a disj. OrListDisj ps a disj |]
+   , [t| forall r bs_pss. NuMatchingAny1 r => MbPermImpls r bs_pss |]
+   , [t| forall r ps. NuMatchingAny1 r => PermImpl r ps |]
+   , [t| forall ps_in ps_out. LocalPermImpl ps_in ps_out |]
+   , [t| forall ps ps'. LocalImplRet ps ps' |]]
+  r2 <- concatMapM id
+   [ [d| instance NuMatchingAny1 EqPerm where
+           nuMatchingAny1Proof = nuMatchingProof |]
+
+   , [d| instance NuMatchingAny1 (LocalImplRet ps) where
+           nuMatchingAny1Proof = nuMatchingProof |]
+
+   , [d| instance NuMatchingAny1 (OrListDisj ps a) where
+           nuMatchingAny1Proof = nuMatchingProof |]
+   ]
+  return (r1 ++ r2))
 
 -- | A splitting of an existential list of permissions into a prefix, a single
 -- variable plus permission, and then a suffix

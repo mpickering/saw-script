@@ -37,6 +37,7 @@ import Data.Kind
 import Data.Reflection
 import qualified Data.BitVector.Sized as BV
 import GHC.TypeLits
+import Control.Monad.Extra(concatMapM)
 
 import What4.ProgramLoc
 import What4.FunctionName
@@ -329,32 +330,32 @@ data TypedJumpTarget blocks tops ps where
        TypedJumpTarget blocks tops ((tops :++: args) :++: vars)
 
 
-$(mkNuMatching [t| forall tp. TypedReg tp |])
-$(mkNuMatching [t| forall tp. RegWithVal tp |])
-$(mkNuMatching [t| forall ctx. TypedRegs ctx |])
+$(do
+  r1 <- concatMapM mkNuMatching
+    [
+      ([t| forall tp. TypedReg tp |])
+     ,([t| forall tp. RegWithVal tp |])
+     ,([t| forall ctx. TypedRegs ctx |])
+     ,([t| forall ext tp. NuMatchingExtC ext => TypedExpr ext tp |])
+     ,([t| forall ghosts args gouts ret.
+                   TypedFnHandle ghosts args gouts ret |])
+     ,([t| forall blocks args. TypedBlockID blocks args |])
+     ,([t| forall blocks args. TypedEntryID blocks args |])
+     ,([t| forall blocks args ghosts. TypedCallSiteID blocks args ghosts |])
+     ,([t| forall blocks tops ps_in. TypedJumpTarget blocks tops ps_in |])]
+  r2 <- concatMapM id
+    [ [d| instance NuMatchingAny1 TypedReg where
+              nuMatchingAny1Proof = nuMatchingProof |]
 
-instance NuMatchingAny1 TypedReg where
-  nuMatchingAny1Proof = nuMatchingProof
-
-instance NuMatchingAny1 RegWithVal where
-  nuMatchingAny1Proof = nuMatchingProof
-
-$(mkNuMatching [t| forall ext tp. NuMatchingExtC ext => TypedExpr ext tp |])
-$(mkNuMatching [t| forall ghosts args gouts ret.
-                TypedFnHandle ghosts args gouts ret |])
-$(mkNuMatching [t| forall blocks args. TypedBlockID blocks args |])
-$(mkNuMatching [t| forall blocks args. TypedEntryID blocks args |])
-$(mkNuMatching [t| forall blocks args ghosts. TypedCallSiteID blocks args ghosts |])
-$(mkNuMatching [t| forall blocks tops ps_in. TypedJumpTarget blocks tops ps_in |])
-
-instance NuMatchingAny1 (TypedJumpTarget blocks tops) where
-  nuMatchingAny1Proof = nuMatchingProof
-
-instance NuMatchingAny1 (TypedBlockID blocks) where
-  nuMatchingAny1Proof = nuMatchingProof
-
-instance NuMatchingAny1 (TypedEntryID blocks) where
-  nuMatchingAny1Proof = nuMatchingProof
+    , [d| instance NuMatchingAny1 RegWithVal where
+            nuMatchingAny1Proof = nuMatchingProof |]
+    , [d| instance NuMatchingAny1 (TypedJumpTarget blocks tops) where
+            nuMatchingAny1Proof = nuMatchingProof |]
+    , [d| instance NuMatchingAny1 (TypedBlockID blocks) where
+            nuMatchingAny1Proof = nuMatchingProof |]
+    , [d| instance NuMatchingAny1 (TypedEntryID blocks) where
+            nuMatchingAny1Proof = nuMatchingProof |]]
+  return (r1 ++ r2))
 
 instance Closable (TypedBlockID blocks args) where
   toClosed (TypedBlockID memb ix) =
@@ -781,24 +782,28 @@ data TypedStmtSeq ext blocks tops rets ps_in where
                    TypedStmtSeq ext blocks tops rets ps_in
 
 
-$(mkNuMatching [t| forall r ps. NuMatchingAny1 r => AnnotPermImpl r ps |])
-$(mkNuMatching [t| forall tp ps_out ps_in.
-                TypedLLVMStmt tp ps_out ps_in |])
-$(mkNuMatching [t| forall ext stmt_rets ps_in ps_out. NuMatchingExtC ext =>
-                TypedStmt ext stmt_rets ps_in ps_out |])
-$(mkNuMatching [t| forall tops rets ps. TypedRet tops rets ps |])
+$(do
+  r1 <- concatMapM mkNuMatching
+          [ [t| forall r ps. NuMatchingAny1 r => AnnotPermImpl r ps |]
+          , [t| forall tp ps_out ps_in.
+                  TypedLLVMStmt tp ps_out ps_in |]
+          , [t| forall ext stmt_rets ps_in ps_out. NuMatchingExtC ext =>
+                TypedStmt ext stmt_rets ps_in ps_out |]
+          , [t| forall tops rets ps. TypedRet tops rets ps |]
+          , [t| forall blocks tops rets ps_in.
+                  TypedTermStmt blocks tops rets ps_in |]
+          , [t| forall ext blocks tops rets ps_in.
+                NuMatchingExtC ext => TypedStmtSeq ext blocks tops rets ps_in |]
+          ]
+  r2 <- concatMapM id [
 
-instance NuMatchingAny1 (TypedRet tops rets) where
-  nuMatchingAny1Proof = nuMatchingProof
+          [d| instance NuMatchingAny1 (TypedRet tops rets) where
+                nuMatchingAny1Proof = nuMatchingProof |]
 
-$(mkNuMatching [t| forall blocks tops rets ps_in.
-                TypedTermStmt blocks tops rets ps_in |])
-$(mkNuMatching [t| forall ext blocks tops rets ps_in.
-                NuMatchingExtC ext => TypedStmtSeq ext blocks tops rets ps_in |])
-
-instance NuMatchingExtC ext =>
-         NuMatchingAny1 (TypedStmtSeq ext blocks tops rets) where
-  nuMatchingAny1Proof = nuMatchingProof
+          , [d| instance NuMatchingExtC ext =>
+                  NuMatchingAny1 (TypedStmtSeq ext blocks tops rets) where
+                  nuMatchingAny1Proof = nuMatchingProof |] ]
+  return (r1 ++ r2) )
 
 
 instance SubstVar PermVarSubst m =>
@@ -1106,11 +1111,13 @@ data CallSiteImplRet blocks tops args ghosts ps_out =
   ((tops :++: args) :++: ghosts :~: ps_out)
   (RAssign ExprVar (tops :++: args)) (RAssign ExprVar ghosts)
 
-$(mkNuMatching [t| forall blocks tops args ghosts ps_out.
-                CallSiteImplRet blocks tops args ghosts ps_out |])
+$(concatMapM id
+    [ mkNuMatching [t| forall blocks tops args ghosts ps_out.
+                CallSiteImplRet blocks tops args ghosts ps_out |]
 
-instance NuMatchingAny1 (CallSiteImplRet blocks tops args ghosts) where
-  nuMatchingAny1Proof = nuMatchingProof
+    , [d| instance NuMatchingAny1 (CallSiteImplRet blocks tops args ghosts) where
+            nuMatchingAny1Proof = nuMatchingProof |]
+    ])
 
 instance SubstVar PermVarSubst m =>
          Substable PermVarSubst (CallSiteImplRet
